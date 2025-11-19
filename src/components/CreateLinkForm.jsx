@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-export default function CreateLinkForm({ onSuccess, onError }) {
+export default function CreateLinkForm({ onSuccess }) {
   const [longUrl, setLongUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [urlError, setUrlError] = useState("");
@@ -45,15 +45,12 @@ export default function CreateLinkForm({ onSuccess, onError }) {
 
       if (response.ok) {
         setLongUrl("");
-        onSuccess?.(`Link created successfully! Short URL: ${data.shortUrl}`);
+        onSuccess?.();
       } else {
         setUrlError(data.message || "Failed to create link");
-        onError?.(data.message || "Failed to create link");
       }
     } catch (error) {
-      const errorMsg = "Network error. Please try again.";
-      setUrlError(errorMsg);
-      onError?.(errorMsg);
+      setUrlError("Network error. Please try again.");
       console.error("Failed to add new link", error);
     } finally {
       setSubmitting(false);

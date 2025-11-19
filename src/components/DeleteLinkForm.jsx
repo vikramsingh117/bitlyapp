@@ -1,14 +1,13 @@
 "use client";
 import { useState } from "react";
 
-export default function DeleteLinkForm({ onSuccess, onError }) {
+export default function DeleteLinkForm({ onSuccess }) {
   const [shortId, setShortId] = useState("");
   const [deleting, setDeleting] = useState(false);
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
     if (!shortId.trim()) {
-      onError?.("Please enter a short ID to delete");
       return;
     }
 
@@ -19,17 +18,11 @@ export default function DeleteLinkForm({ onSuccess, onError }) {
         method: "DELETE",
       });
 
-      const data = await response.json();
-
       if (response.ok) {
         setShortId("");
-        onSuccess?.("Link deleted successfully!");
-      } else {
-        onError?.(data.message || "Failed to delete link");
+        onSuccess?.();
       }
     } catch (error) {
-      const errorMsg = "Network error. Please try again.";
-      onError?.(errorMsg);
       console.error("Failed to delete link", error);
     } finally {
       setDeleting(false);

@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# URL Shortener
 
-## Getting Started
+A simple URL shortener application built with Next.js and MongoDB.
 
-First, run the development server:
+## Functionality
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Create Short Links
+- Enter a long URL in the form
+- The app generates a unique short URL
+- Short URLs are in the format: `http://localhost:3000/api/links/{shortId}`
+- Clicking the short URL redirects to the original long URL
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### View Links
+- View all created links in a table
+- See the short URL, long URL, click count, creation date, and last clicked date
+- Search and filter links
+- Sort by any column (short URL, long URL, clicks, dates)
+- Copy short or long URLs to clipboard
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Delete Links
+- Enter the short ID of a link to delete it
+- Link is permanently removed from the database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Track Clicks
+- Each time a short URL is accessed, the visit count increases
+- The last clicked timestamp is updated
 
-## Learn More
+## API Endpoints
 
-To learn more about Next.js, take a look at the following resources:
+- GET /api/links - Get all links
+- POST /api/links - Create a new short link (requires longUrl in body)
+- GET /api/links/{id} - Redirect to the long URL for the given short ID
+- DELETE /api/links/{id} - Delete a link by short ID
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- MONGODB_URI - MongoDB connection string
+- BASE_URL or SHORT_URL - Base URL for generating short links (defaults to http://localhost:3000)
 
-## Deploy on Vercel
+## Setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Install dependencies: `npm install`
+2. Create a .env file with MONGODB_URI and optional BASE_URL
+3. Run development server: `npm run dev`
+4. Open http://localhost:3000

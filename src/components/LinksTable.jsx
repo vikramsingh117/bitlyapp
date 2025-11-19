@@ -1,12 +1,10 @@
 "use client";
 import { useState } from "react";
-import LinkRow from "./LinkRow";
 
-export default function LinksTable({ links, loading, onRefresh }) {
+export default function LinksTable({ links, loading }) {
+  const [filter, setFilter] = useState("");
   const [sortField, setSortField] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState("desc");
-  const [filter, setFilter] = useState("");
-  const [copiedId, setCopiedId] = useState("");
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -17,123 +15,129 @@ export default function LinksTable({ links, loading, onRefresh }) {
     }
   };
 
-  const handleCopy = async (text, id) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(""), 2000);
-    } catch (err) {
-      console.error("Failed to copy", err);
-    }
-  };
+  const filteredLinks = links.filter((link) => {
+    if (!filter) return true;
+    const searchTerm = filter.toLowerCase();
+    return (
+      link.longUrl.toLowerCase().includes(searchTerm) ||
+      link.shortUrl.toLowerCase().includes(searchTerm) ||
+      link.shortId.toLowerCase().includes(searchTerm)
+    );
+  });
 
-  const truncateUrl = (url, maxLength = 50) => {
+  const sortedLinks = [...filteredLinks].sort((a, b) => {
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+
+    if (sortField === "createdAt" || sortField === "updatedAt") {
+      aVal = new Date(aVal).getTime();
+      bVal = new Date(bVal).getTime();
+    } else if (typeof aVal === "string") {
+      aVal = aVal.toLowerCase();
+      bVal = bVal.toLowerCase();
+    }
+
+    if (sortOrder === "asc") {
+      return aVal > bVal ? 1 : -1;
+    } else {
+      return aVal < bVal ? 1 : -1;
+    }
+  });
+
+  if (loading) {
+    return (
+      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <p>Loading links...</p>
+      </section>
+    );
+  }
+
+  if (links.length === 0) {
+    return (
+      <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <p>No links yet. Create your first short link above!</p>
+      </section>
+    );
+  }
+
+  const truncateUrl = (url, maxLength = 60) => {
     if (url.length <= maxLength) return url;
     return url.substring(0, maxLength) + "...";
   };
 
-  const sortedAndFilteredLinks = [...links]
-    .filter((link) => {
-      if (!filter) return true;
-      const searchTerm = filter.toLowerCase();
-      return (
-        link.longUrl.toLowerCase().includes(searchTerm) ||
-        link.shortUrl.toLowerCase().includes(searchTerm) ||
-        link.shortId.toLowerCase().includes(searchTerm)
-      );
-    })
-    .sort((a, b) => {
-      let aVal = a[sortField];
-      let bVal = b[sortField];
-
-      if (sortField === "createdAt" || sortField === "updatedAt") {
-        aVal = new Date(aVal).getTime();
-        bVal = new Date(bVal).getTime();
-      } else if (typeof aVal === "string") {
-        aVal = aVal.toLowerCase();
-        bVal = bVal.toLowerCase();
-      }
-
-      if (sortOrder === "asc") {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
-      }
-    });
-
-  const SortableHeader = ({ field, children }) => (
-    <th
-      className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-      onClick={() => handleSort(field)}
-    >
-      <div className="flex items-center gap-2">
-        {children}
-        {sortField === field && (
-          <span>{sortOrder === "asc" ? "↑" : "↓"}</span>
-        )}
-      </div>
-    </th>
-  );
-
   return (
     <section className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div className="mb-4 flex gap-4 items-center">
         <h2 className="text-xl font-semibold text-gray-900">Your Links</h2>
         <input
           type="text"
-          placeholder="Search links..."
+          placeholder="Search..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64"
+          className="border border-gray-300 rounded px-3 py-1"
         />
       </div>
-
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading links...</p>
+      <div className="overflow-x-auto">
+        <table className="w-full table-fixed">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200">
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase cursor-pointer hover:bg-gray-100 w-1/4"
+                onClick={() => handleSort("shortUrl")}
+              >
+                Short URL {sortField === "shortUrl" && (sortOrder === "asc" ? "↑" : "↓")}
+              </th>
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase cursor-pointer hover:bg-gray-100 w-2/5"
+                onClick={() => handleSort("longUrl")}
+              >
+                Long URL {sortField === "longUrl" && (sortOrder === "asc" ? "↑" : "↓")}
+              </th>
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase cursor-pointer hover:bg-gray-100 w-1/12"
+                onClick={() => handleSort("visitCount")}
+              >
+                Clicks {sortField === "visitCount" && (sortOrder === "asc" ? "↑" : "↓")}
+              </th>
+              <th
+                className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase cursor-pointer hover:bg-gray-100 w-1/6"
+                onClick={() => handleSort("updatedAt")}
+              >
+                Last Clicked {sortField === "updatedAt" && (sortOrder === "asc" ? "↑" : "↓")}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {sortedLinks.map((link) => (
+              <tr key={link._id} className="hover:bg-gray-50">
+                <td className="px-4 py-3">
+                  <a href={link.shortUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline truncate block" title={link.shortUrl}>
+                    {truncateUrl(link.shortUrl, 40)}
+                  </a>
+                </td>
+                <td className="px-4 py-3">
+                  <span className="text-sm text-gray-900 truncate block" title={link.longUrl}>
+                    {truncateUrl(link.longUrl, 60)}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <span className="text-sm text-gray-900">{link.visitCount}</span>
+                </td>
+                <td className="px-4 py-3">
+                  <span className="text-sm text-gray-600">
+                    {new Date(link.updatedAt).toLocaleDateString()}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {filter && (
+        <div className="mt-4 text-sm text-gray-600">
+          Showing {sortedLinks.length} of {links.length} links
         </div>
-      ) : sortedAndFilteredLinks.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">
-            {filter ? "No links match your search" : "No links yet. Create your first short link above!"}
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <SortableHeader field="shortUrl">Short URL</SortableHeader>
-                  <SortableHeader field="longUrl">Long URL</SortableHeader>
-                  <SortableHeader field="visitCount">Clicks</SortableHeader>
-                  <SortableHeader field="createdAt">Created</SortableHeader>
-                  <SortableHeader field="updatedAt">Last Clicked</SortableHeader>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {sortedAndFilteredLinks.map((link) => (
-                  <LinkRow
-                    key={link._id}
-                    link={link}
-                    copiedId={copiedId}
-                    onCopy={handleCopy}
-                    truncateUrl={truncateUrl}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-4 text-sm text-gray-600">
-            Showing {sortedAndFilteredLinks.length} of {links.length} link{links.length !== 1 ? "s" : ""}
-          </div>
-        </>
       )}
     </section>
   );
 }
-
