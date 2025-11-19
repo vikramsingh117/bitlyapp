@@ -23,6 +23,5 @@ export async function POST(req) {
 export async function GET() {
     await connectToDb();
     const links = await Link.find();
-    if (links.length === 0) return Response.json({ message: "No links found" }, { status: 404 });
     return Response.json(links, { status: 200 });
 }
